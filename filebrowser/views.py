@@ -40,7 +40,7 @@ def index(request, dir_name=None):
     Show list of files on a server-directory.
     """
     
-    path = _get_path(dir_name)
+    path = _get_path(request, dir_name)
     query = _get_query(request.GET)
     
     # INITIAL VARIABLES
@@ -49,7 +49,15 @@ def index(request, dir_name=None):
     for k,v in EXTENSIONS.iteritems():
         counter[k] = 0
     
-    dir_list = os.listdir(os.path.join(PATH_SERVER, path))
+    try:
+        dir_list = os.listdir(os.path.join(PATH_SERVER, path))
+    except OSError, e:
+        # makes a user's subfolder if it doesnt exist, raises otherwise
+        if e.errno != 2:
+            raise
+        os.mkdir(os.path.join(PATH_SERVER, path))
+        dir_list = []
+        
     file_list = []
     for file in dir_list:
         
@@ -183,7 +191,7 @@ def mkdir(request, dir_name=None):
     Make directory
     """
     
-    path = _get_path(dir_name)
+    path = _get_path(request, dir_name)
     query = _get_query(request.GET)
     
     if request.method == 'POST':
@@ -225,7 +233,7 @@ def upload(request, dir_name=None):
     
     from django.forms.formsets import formset_factory
     
-    path = _get_path(dir_name)
+    path = _get_path(request, dir_name)
     query = _get_query(request.GET)
     
     # PIL's Error "Suspension not allowed here" work around:
@@ -284,7 +292,7 @@ def makethumb(request, dir_name=None, file_name=None):
         upload functionality of the FileBrowser.
     """
     
-    path = _get_path(dir_name)
+    path = _get_path(request, dir_name)
     query = _get_query(request.GET)
     
     if file_name:
@@ -322,7 +330,7 @@ def delete(request, dir_name=None):
         When trying to delete a directory, the directory has to be empty.
     """
     
-    path = _get_path(dir_name)
+    path = _get_path(request, dir_name)
     query = _get_query(request.GET)
     msg = ""
     
@@ -389,7 +397,7 @@ def rename(request, dir_name=None, file_name=None):
     Rename existing File/Directory.
     """
     
-    path = _get_path(dir_name)
+    path = _get_path(request, dir_name)
     query = _get_query(request.GET)
     
     if os.path.isfile(os.path.join(PATH_SERVER, path, file_name)): # file
@@ -448,7 +456,7 @@ def generateimages(request, dir_name=None, file_name=None):
         upload functionality of the FileBrowser.
     """
     
-    path = _get_path(dir_name)
+    path = _get_path(request, dir_name)
     query = _get_query(request.GET)
     
     if file_name:

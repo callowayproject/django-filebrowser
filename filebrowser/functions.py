@@ -29,16 +29,24 @@ def _url_join(*args):
     return url
     
 
-def _get_path(dir_name):
+def _get_path(request, dir_name):
     """
     Get path.
     """
+    if request.user.is_superuser:
+        if dir_name:
+            return dir_name + "/"
+        else:
+            return ""
     
+    if dir_name and dir_name.startswith('%s/' % request.user):
+        dir_name = dir_name.replace('%s/' % request.user, '')
+    if dir_name == request.user.username:
+        dir_name = None
     if dir_name:
-        path = dir_name + "/"
+        return '%s/%s/' % (request.user, dir_name)
     else:
-        path = ""
-    return path
+        return '%s/' % request.user
     
 
 def _get_subdir_list(dir_name):
